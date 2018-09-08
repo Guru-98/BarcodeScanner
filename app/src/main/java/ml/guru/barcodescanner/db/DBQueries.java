@@ -33,21 +33,21 @@ public class DBQueries{
     public boolean insertItem(Items item) {
         ContentValues values = new ContentValues();
         values.put(DBConstants.ITEM_ID, item.getItemId());
-        values.put(DBConstants.ITEM_PRESENT, item.getPresent());
+        values.put(DBConstants.ITEM_PRESENT, (item.getPresent()) ? 1 : 0);
         values.put(DBConstants.ITEM_COUNT, item.getCount());
         return database.insert(DBConstants.STOCK_TABLE, null, values) > -1;
     }
 
-    public boolean findItem(String itemid){
-        database = dbHelper.getReadableDatabase();
-        return database.query(DBConstants.STOCK_TABLE, new String[]{DBConstants.ITEM_ID},DBConstants.ITEM_ID + "= ?", new String[]{itemid},null,null,null).getCount() > 0;
-    }
-
     public boolean checkItem(String itemid){
         database = dbHelper.getWritableDatabase();
-        ContentValues contentValues = new ContentValues();
-        contentValues.put(DBConstants.ITEM_PRESENT,1);
-        return database.update(DBConstants.STOCK_TABLE, contentValues, DBConstants.ITEM_ID + "= ?", new String[]{itemid}) > 0;
+        if (database.query(DBConstants.STOCK_TABLE, new String[]{DBConstants.ITEM_ID}, DBConstants.ITEM_ID + "= ?", new String[]{itemid}, null, null, null).getCount() > 0) {
+            ContentValues contentValues = new ContentValues();
+            contentValues.put(DBConstants.ITEM_PRESENT, 1);
+            database.update(DBConstants.STOCK_TABLE, contentValues, DBConstants.ITEM_ID + "= ?", new String[]{itemid});
+            database.execSQL("UPDATE " + DBConstants.STOCK_TABLE + " SET " + DBConstants.ITEM_COUNT + " = " + DBConstants.ITEM_COUNT + " + 1 WHERE " + DBConstants.ITEM_ID + " IS '" + itemid + "'");
+            return true;
+        }
+        return false;
     }
 
     public ArrayList<Items> readItems() {
@@ -74,5 +74,11 @@ public class DBQueries{
             Log.v("Exception", e.getMessage());
         }
         return list;
+    }
+
+    public void clean() {
+        database = dbHelper.getWritableDatabase();
+        database.execSQL(DBConstants.DROP_QUERY);
+        database.execSQL(DBConstants.CREATE_STOCK_TABLE);
     }
 }

@@ -7,6 +7,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
+import android.widget.EditText;
 import android.widget.TextView;
 
 import java.util.List;
@@ -47,7 +48,7 @@ public class DBAdapter extends BaseAdapter {
         @SuppressLint("ViewHolder") View rowView = inflater.inflate(R.layout.list_item, viewGroup, false);
 
         TextView idText = rowView.findViewById(R.id.listview_item_id);
-        TextView countText = rowView.findViewById(R.id.listview_item_count);
+        final EditText countText = rowView.findViewById(R.id.listview_item_count);
 
         idText.setText(itemsList.get(i).getItemId());
         countText.setText(String.valueOf(itemsList.get(i).getCount()));

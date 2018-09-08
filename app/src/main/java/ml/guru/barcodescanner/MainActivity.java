@@ -19,12 +19,14 @@ import android.widget.ListView;
 import android.widget.Toast;
 
 import com.ajts.androidmads.library.ExcelToSQLite;
+import com.ajts.androidmads.library.SQLiteToExcel;
 import com.google.zxing.integration.android.IntentIntegrator;
 import com.google.zxing.integration.android.IntentResult;
 
 import java.util.ArrayList;
 
 import ml.guru.barcodescanner.adapter.DBAdapter;
+import ml.guru.barcodescanner.db.DBConstants;
 import ml.guru.barcodescanner.db.DBHelper;
 import ml.guru.barcodescanner.db.DBQueries;
 import ml.guru.barcodescanner.model.Items;
@@ -33,40 +35,46 @@ import ml.guru.barcodescanner.util.PathUtil;
 
 public class MainActivity extends AppCompatActivity {
 
-    private Button scanbtn;
     private IntentIntegrator barScan;
     private Button loadbtn;
     private Button savebtn;
     private ListView listView;
 
     private DBQueries dbQueries;
-    private DBHelper dbHelper;
 
-    private final int loadCode = 0x000010ad;
+    private final int loadCode = 0x10ad;
+    private final int saveCode = 0x05a3;
     private final int GOT_STORAGE_PERMISION = 0x900d;
-    private ArrayList<Items> itemsList;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        dbHelper = new DBHelper(getApplicationContext());
+        DBHelper dbHelper = new DBHelper(getApplicationContext());
         dbQueries =new DBQueries(getApplicationContext());
+        clearDB();
 
         barScan = new IntentIntegrator(this);
+        barScan.setOrientationLocked(true);
 
         listView =findViewById(R.id.listview);
-        scanbtn = findViewById(R.id.scanbtn);
-        scanbtn.setOnClickListener(new View.OnClickListener() {
+        loadbtn = findViewById(R.id.loadbtn);
+        savebtn = findViewById(R.id.savebtn);
+
+        findViewById(R.id.scanbtn).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 barScan.initiateScan();
             }
         });
-        loadbtn = findViewById(R.id.loadbtn);
-        savebtn = findViewById(R.id.savebtn);
 
+        findViewById(R.id.clearbtn).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                clearDB();
+            }
+        });
 
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE)
                 != PackageManager.PERMISSION_GRANTED) {
@@ -88,14 +96,11 @@ public class MainActivity extends AppCompatActivity {
              Toast.makeText(this,"Barcode/QR is not recognized", Toast.LENGTH_SHORT).show();
             } else {
              dbQueries.open();
-             if(!dbQueries.findItem(contents)) {
+                if (!dbQueries.checkItem(contents)) {
                  Items nItem = new Items(contents);
                  nItem.setCount(1);
                  nItem.setPresent(true);
                  dbQueries.insertItem(nItem);
-             }
-             else{
-                 dbQueries.checkItem(contents);
              }
              dbQueries.close();
 
@@ -113,6 +118,7 @@ public class MainActivity extends AppCompatActivity {
 
             dbQueries.open();
             ExcelToSQLite excelToSQLite = new ExcelToSQLite(getApplicationContext(), DBHelper.DB_NAME, true);
+            assert FilePath != null;
             excelToSQLite.importFromFile(FilePath, new ExcelToSQLite.ImportListener() {
                 @Override
                 public void onStart() {
@@ -132,6 +138,34 @@ public class MainActivity extends AppCompatActivity {
                 }
             });
             dbQueries.close();
+        } else if (requestCode == saveCode && resultCode == Activity.RESULT_OK && data != null) {
+            Uri uri = data.getData();
+            assert uri != null;
+            String FilePath = PathUtil.getPath(getApplicationContext(), uri);
+            assert FilePath != null;
+            String DirPath = FilePath.substring(0, FilePath.lastIndexOf('/'));
+            String FileName = FilePath.substring(FilePath.lastIndexOf('/'));
+
+            Log.d("SAVBTN", FilePath);
+
+            SQLiteToExcel sqliteToExcel = new SQLiteToExcel(getApplicationContext(), DBHelper.DB_NAME, DirPath);
+            sqliteToExcel.exportSingleTable(DBConstants.STOCK_TABLE, FileName, new SQLiteToExcel.ExportListener() {
+                @Override
+                public void onStart() {
+
+                }
+
+                @Override
+                public void onCompleted(String filePath) {
+                    Toast.makeText(getApplicationContext(), "Saved", Toast.LENGTH_SHORT).show();
+                }
+
+                @Override
+                public void onError(Exception e) {
+                    Log.getStackTraceString(e);
+                    Toast.makeText(getApplicationContext(), "Error", Toast.LENGTH_SHORT).show();
+                }
+            });
         }
     }
 
@@ -168,18 +202,32 @@ public class MainActivity extends AppCompatActivity {
         savebtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                //TODO: Saving XLS files
-
+                Intent intent = new Intent(Intent.ACTION_CREATE_DOCUMENT);
+                intent.addCategory(Intent.CATEGORY_OPENABLE);
+                intent.setType("*/*");
+                intent.putExtra(Intent.EXTRA_MIME_TYPES,
+                        new String[]{"application/vnd.ms-excel",
+                                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"});
+                intent.putExtra(Intent.EXTRA_TITLE, "New.xls");
+                startActivityForResult(intent, saveCode);
             }
         });
     }
 
     private void populateList(){
         dbQueries.open();
-        itemsList = dbQueries.readItems();
+        ArrayList<Items> itemsList = dbQueries.readItems();
         Log.v("POP", String.valueOf(itemsList.size()));
         DBAdapter listAdapter = new DBAdapter(getApplicationContext(), itemsList);
         listView.setAdapter(listAdapter);
         dbQueries.close();
+    }
+
+    private void clearDB() {
+        dbQueries.open();
+        dbQueries.clean();
+        dbQueries.close();
+
+        populateList();
     }
 }

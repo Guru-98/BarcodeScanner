@@ -7,9 +7,10 @@ public class DBConstants {
     public static final String ITEM_COUNT = "item_count";
 
     public static final String CREATE_STOCK_TABLE = "CREATE TABLE IF NOT EXISTS " + STOCK_TABLE + " ("
-            + ITEM_ID + " INTEGER PRIMARY KEY,"
-            + ITEM_PRESENT + " BOOLEAN DEFAULT 0,"
-            + ITEM_COUNT + " INTEGER DEFAULT 0)";
+            + ITEM_ID + " TEXT,"
+            + ITEM_PRESENT + " INTEGER,"
+            + ITEM_COUNT + " INTEGER)";
 
     public static final String SELECT_QUERY = "SELECT * FROM " + STOCK_TABLE;
+    public static final String DROP_QUERY = "DROP TABLE IF EXISTS " + DBConstants.STOCK_TABLE;
 }
