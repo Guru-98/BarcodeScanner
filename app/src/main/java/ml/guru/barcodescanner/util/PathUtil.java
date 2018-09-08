@@ -9,8 +9,7 @@ import android.os.Build;
 import android.os.Environment;
 import android.provider.DocumentsContract;
 import android.provider.MediaStore;
-
-import java.net.URISyntaxException;
+import android.util.Log;
 
 public class PathUtil {
     /*
@@ -57,6 +56,7 @@ public class PathUtil {
                     return cursor.getString(column_index);
                 }
             } catch (Exception e) {
+                Log.getStackTraceString(e);
             }
         } else if ("file".equalsIgnoreCase(uri.getScheme())) {
             return uri.getPath();

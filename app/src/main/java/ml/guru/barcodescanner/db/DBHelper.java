@@ -7,8 +7,6 @@ import android.database.sqlite.SQLiteOpenHelper;
 public class DBHelper extends SQLiteOpenHelper {
     private Context context;
     private static int DB_VERSION = 1;
-
-
     public static String DB_NAME = "Stock";
 
     public DBHelper(Context context){

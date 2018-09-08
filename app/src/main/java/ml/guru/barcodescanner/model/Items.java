@@ -5,9 +5,10 @@ public class Items {
     private Boolean present;
     private Integer count;
 
-    public Items(Boolean present, Integer count) {
-        this.present = present;
-        this.count = count;
+    public Items(String itemId) {
+        this.itemId = itemId;
+        this.present = false;
+        this.count = 0;
     }
 
     public Items(String itemId, Boolean present, Integer count) {

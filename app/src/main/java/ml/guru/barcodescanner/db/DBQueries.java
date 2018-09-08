@@ -38,13 +38,26 @@ public class DBQueries{
         return database.insert(DBConstants.STOCK_TABLE, null, values) > -1;
     }
 
+    public boolean findItem(String itemid){
+        database = dbHelper.getReadableDatabase();
+        return database.query(DBConstants.STOCK_TABLE, new String[]{DBConstants.ITEM_ID},DBConstants.ITEM_ID + "= ?", new String[]{itemid},null,null,null).getCount() > 0;
+    }
+
+    public boolean checkItem(String itemid){
+        database = dbHelper.getWritableDatabase();
+        ContentValues contentValues = new ContentValues();
+        contentValues.put(DBConstants.ITEM_PRESENT,1);
+        return database.update(DBConstants.STOCK_TABLE, contentValues, DBConstants.ITEM_ID + "= ?", new String[]{itemid}) > 0;
+    }
+
     public ArrayList<Items> readItems() {
         ArrayList<Items> list = new ArrayList<>();
         try {
-            Cursor cursor;
             database = dbHelper.getReadableDatabase();
-            cursor = database.rawQuery(DBConstants.SELECT_QUERY, null);
+            Cursor cursor = database.rawQuery(DBConstants.SELECT_QUERY, null);
             list.clear();
+            Log.v("DBQ", String.valueOf(cursor.getCount()));
+            Log.v("DBQ", String.valueOf(cursor.getColumnCount()));
             if (cursor.getCount() > 0) {
                 if (cursor.moveToFirst()) {
                     do {

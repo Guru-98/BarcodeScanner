@@ -8,15 +8,17 @@
     tools:context=".MainActivity">
 
     <LinearLayout
+        android:id="@+id/topPanel"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:gravity="center_horizontal"
         android:orientation="horizontal"
-        app:layout_constraintBottom_toBottomOf="parent"
+        android:padding="5dp"
+        app:layout_constraintBottom_toTopOf="@id/listview"
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintRight_toRightOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.03">
+        app:layout_constraintVertical_bias="0.0">
 
         <Button
             android:id="@+id/scanbtn"
@@ -36,5 +38,14 @@
             android:layout_height="wrap_content"
             android:text="Save" />
     </LinearLayout>
+
+    <ListView
+        android:id="@+id/listview"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/topPanel" />
 
 </android.support.constraint.ConstraintLayout>
